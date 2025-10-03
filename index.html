@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZENN Bug Reporter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+            color: #00ff00;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(0deg, rgba(0, 255, 0, 0.03) 0px, transparent 1px, transparent 2px, rgba(0, 255, 0, 0.03) 3px),
+                repeating-linear-gradient(90deg, rgba(255, 0, 0, 0.03) 0px, transparent 1px, transparent 2px, rgba(255, 0, 0, 0.03) 3px);
+            pointer-events: none;
+            z-index: 0;
+            animation: glitchBg 8s infinite;
+        }
+
+        @keyframes glitchBg {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(255, 0, 0, 0.1) 50%,
+                transparent 100%
+            );
+            animation: scan 6s linear infinite;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .page {
+            display: none;
+            animation: glitchIn 0.5s ease;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        @keyframes glitchIn {
+            0% { 
+                opacity: 0; 
+                transform: translateX(-10px);
+                filter: blur(5px);
+            }
+            50% { 
+                transform: translateX(10px);
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateX(0);
+                filter: blur(0);
+            }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid #ff0000;
+            border-radius: 5px;
+            padding: 40px;
+            box-shadow: 
+                0 0 50px rgba(255, 0, 0, 0.5),
+                inset 0 0 50px rgba(0, 0, 0, 0.8),
+                0 0 100px rgba(0, 255, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            animation: cardPulse 3s infinite;
+        }
+
+        @keyframes cardPulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 50px rgba(255, 0, 0, 0.5),
+                    inset 0 0 50px rgba(0, 0, 0, 0.8),
+                    0 0 100px rgba(0, 255, 0, 0.2);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 80px rgba(255, 0, 0, 0.7),
+                    inset 0 0 50px rgba(0, 0, 0, 0.8),
+                    0 0 150px rgba(0, 255, 0, 0.3);
+            }
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff0000, #00ff00, #ff0000);
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0.5;
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #ff0000;
+            box-shadow: 
+                0 0 30px rgba(255, 0, 0, 0.8),
+                0 0 60px rgba(255, 0, 0, 0.5),
+                inset 0 0 30px rgba(0, 0, 0, 0.8);
+            animation: logoGlitch 2s infinite;
+            margin-bottom: 15px;
+            filter: contrast(1.2) brightness(0.9);
+        }
+
+        @keyframes logoGlitch {
+            0%, 100% { 
+                transform: translateY(0) scale(1);
+                filter: contrast(1.2) brightness(0.9);
+            }
+            10% { 
+                transform: translateX(-5px) scale(1.02);
+                filter: contrast(1.5) brightness(1.1);
+            }
+            20% { 
+                transform: translateX(5px) scale(0.98);
+                filter: contrast(1) brightness(0.8);
+            }
+            30% { 
+                transform: translateY(0) scale(1);
+                filter: contrast(1.2) brightness(0.9);
+            }
+        }
+
+        .logo-text {
+            font-size: 42px;
+            font-weight: bold;
+            color: #ff0000;
+            text-shadow: 
+                0 0 10px #ff0000,
+                0 0 20px #ff0000,
+                0 0 30px #ff0000,
+                2px 2px 0 #00ff00;
+            margin-bottom: 10px;
+            animation: textGlitch 3s infinite;
+            letter-spacing: 5px;
+        }
+
+        @keyframes textGlitch {
+            0%, 90%, 100% { 
+                text-shadow: 
+                    0 0 10px #ff0000,
+                    0 0 20px #ff0000,
+                    0 0 30px #ff0000,
+                    2px 2px 0 #00ff00;
+            }
+            25% { 
+                text-shadow: 
+                    0 0 10px #ff0000,
+                    0 0 20px #ff0000,
+                    0 0 30px #ff0000,
+                    -2px -2px 0 #00ff00;
+            }
+            50% { 
+                text-shadow: 
+                    0 0 10px #ff0000,
+                    0 0 20px #ff0000,
+                    0 0 30px #ff0000,
+                    2px -2px 0 #00ff00;
+            }
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #00ff00;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff00;
+            letter-spacing: 2px;
+        }
+
+        .warning-box {
+            background: rgba(20, 0, 0, 0.8);
+            border: 2px solid #ff0000;
+            color: #ff0000;
+            padding: 20px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            line-height: 1.8;
+            box-shadow: 
+                0 0 20px rgba(255, 0, 0, 0.5),
+                inset 0 0 20px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 2;
+            animation: warningPulse 2s infinite;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { 
+                border-color: #ff0000;
+                box-shadow: 
+                    0 0 20px rgba(255, 0, 0, 0.5),
+                    inset 0 0 20px rgba(0, 0, 0, 0.8);
+            }
+            50% { 
+                border-color: #ff3333;
+                box-shadow: 
+                    0 0 40px rgba(255, 0, 0, 0.8),
+                    inset 0 0 20px rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        .warning-box strong {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border: 2px solid #00ff00;
+            background: rgba(0, 20, 0, 0.8);
+            font-size: 15px;
+            transition: all 0.3s ease;
+            color: #00ff00;
+            position: relative;
+            z-index: 2;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: #006600;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ff0000;
+            box-shadow: 
+                0 0 20px rgba(255, 0, 0, 0.5),
+                inset 0 0 10px rgba(0, 0, 0, 0.8);
+            transform: translateY(-2px);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: rgba(20, 0, 0, 0.9);
+            color: #ff0000;
+            border: 2px solid #ff0000;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 0, 0.5), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            background: rgba(40, 0, 0, 0.9);
+            box-shadow: 
+                0 0 40px rgba(255, 0, 0, 0.8),
+                inset 0 0 20px rgba(255, 0, 0, 0.2);
+            transform: translateY(-3px);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 20, 0, 0.9);
+            border-color: #00ff00;
+            color: #00ff00;
+            margin-top: 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 40, 0, 0.9);
+            box-shadow: 
+                0 0 40px rgba(0, 255, 0, 0.8),
+                inset 0 0 20px rgba(0, 255, 0, 0.2);
+        }
+
+        .error-message {
+            background: rgba(20, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            color: #ff0000;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: none;
+            animation: errorShake 0.5s ease;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .success-message {
+            background: rgba(0, 20, 0, 0.9);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: none;
+            animation: successGlitch 0.5s ease;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @keyframes successGlitch {
+            0%, 100% { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+            25% { 
+                opacity: 0.5;
+                transform: translateY(-5px) translateX(-5px);
+            }
+            50% { 
+                opacity: 1;
+                transform: translateY(-10px) translateX(5px);
+            }
+            75% { 
+                opacity: 0.5;
+                transform: translateY(-5px) translateX(-5px);
+            }
+        }
+
+        .music-control {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(20, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            color: #ff0000;
+            font-size: 24px;
+            animation: musicPulse 2s infinite;
+        }
+
+        @keyframes musicPulse {
+            0%, 100% { 
+                box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            }
+            50% { 
+                box-shadow: 0 0 50px rgba(255, 0, 0, 0.8);
+            }
+        }
+
+        .music-control:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(255, 0, 0, 0.8);
+            background: rgba(40, 0, 0, 0.9);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #00ff00;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 14px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 0 10px #00ff00;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .glitch-text {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -2px 0 #ff0000;
+            animation: glitch-1 0.3s infinite linear alternate-reverse;
+        }
+
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: 2px 0 #00ff00;
+            animation: glitch-2 0.3s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-1 {
+            0% { clip-path: inset(40% 0 61% 0); }
+            20% { clip-path: inset(92% 0 1% 0); }
+            40% { clip-path: inset(43% 0 1% 0); }
+            60% { clip-path: inset(25% 0 58% 0); }
+            80% { clip-path: inset(54% 0 7% 0); }
+            100% { clip-path: inset(58% 0 43% 0); }
+        }
+
+        @keyframes glitch-2 {
+            0% { clip-path: inset(50% 0 40% 0); }
+            20% { clip-path: inset(82% 0 11% 0); }
+            40% { clip-path: inset(33% 0 11% 0); }
+            60% { clip-path: inset(15% 0 68% 0); }
+            80% { clip-path: inset(44% 0 17% 0); }
+            100% { clip-path: inset(48% 0 33% 0); }
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 30px 25px;
+            }
+            
+            .logo-img {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    
+    <audio id="bgMusic" loop>
+        <source src="https://files.catbox.moe/lgdlrj.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- LOGIN PAGE -->
+    <div id="login" class="page active">
+        <div class="container">
+            <div class="card">
+                <div class="logo-container">
+                    <img src="https://img1.pixhost.to/images/9070/645760844_nuxoffc.jpg" alt="ZENN Logo" class="logo-img">
+                    <div class="logo-text glitch-text" data-text="ZENN">ZENN</div>
+                    <div class="subtitle">BUG ATTACTK 👑</div>
+                </div>
+                
+                <div id="loginError" class="error-message">
+                    [ERROR] ACCESS DENIED
+                </div>
+                
+                <label class="form-label">[USERNAME]</label>
+                <input type="text" id="username" placeholder="ENTER USERNAME">
+                
+                <label class="form-label">[PASSWORD]</label>
+                <input type="password" id="password" placeholder="ENTER PASSWORD">
+                
+                <button onclick="checkLogin()">[AUTHENTICATE]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOME PAGE -->
+    <div id="home" class="page">
+        <div class="container">
+            <div class="card">
+                <div class="logo-container">
+                    <img src="https://img1.pixhost.to/images/9070/645760844_nuxoffc.jpg" alt="ZENN Logo" class="logo-img">
+                    <div class="logo-text glitch-text" data-text="© ZENN">© ZENN</div>
+                </div>
+                
+                <div class="warning-box">
+                    <strong>[WARNING]</strong>
+                    INI HANYA TAMPILAN<br>
+                    TIDAK BISA MENGBUG ORANG<br>
+                    HANYA UNTUK MENAKUT-NAKUTI RIPPER ATAU YANG LAIN
+                </div>
+                
+                <button onclick="showPage('bug')">[INITIATE BUG]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUG PAGE -->
+    <div id="bug" class="page">
+        <div class="container">
+            <div class="card">
+                <div class="logo-container">
+                    <img src="https://img1.pixhost.to/images/9070/645760844_nuxoffc.jpg" alt="ZENN Logo" class="logo-img">
+                    <div class="logo-text glitch-text" data-text="V1 BUG"> V1 BUG</div>
+                </div>
+                
+                <div id="bugSuccess" class="success-message">
+                    [SUCCESS] BUG DEPLOYED TO TARGET
+                </div>
+                
+                <label class="form-label">[TARGET NUMBER]</label>
+                <input type="text" id="target" placeholder="ENTER TARGET NUMBER">
+                
+                <label class="form-label">[BUG TYPE]</label>
+                <select id="bugType">
+                    <option value="Crash UI">[CRASH UI]</option>
+                    <option value="Fclose">[FCLOSE]</option>
+                    <option value="Blank">[BLANK]</option>
+                </select>
+                
+                <label class="form-label">[BUG DESCRIPTION]</label>
+                <textarea id="bugText" placeholder="ENTER BUG DETAILS..."></textarea>
+                
+                <button onclick="sendBug()">[DEPLOY BUG]</button>
+                <button class="btn-secondary" onclick="showPage('home')">[RETURN]</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="music-control" id="musicBtn">✕</div>
+
+    <script>
+        // Navigation
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // Login
+        function checkLogin() {
+            let user = document.getElementById('username').value;
+            let pw = document.getElementById('password').value;
+            
+            if (user === "Bugzen" && pw === "ZENNV1") {
+                showPage('home');
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('loginError').style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Send Bug
+        function sendBug() {
+            let target = document.getElementById('target').value.trim();
+            
+            if (target === "") {
+                alert("[ERROR] TARGET NUMBER REQUIRED");
+                return;
+            }
+            
+            let successMsg = document.getElementById('bugSuccess');
+            successMsg.style.display = 'block';
+            
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 5000);
+        }
+
+        // Music Control
+        const bgMusic = document.getElementById("bgMusic");
+        const musicBtn = document.getElementById("musicBtn");
+        
+        musicBtn.onclick = () => {
+            if (bgMusic.paused) {
+                bgMusic.play();
+                musicBtn.textContent = "♪";
+            } else {
+                bgMusic.pause();
+                musicBtn.textContent = "✕";
+            }
+        }
+
+        // Enter key for login
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkLogin();
+            }
+        });
+
+        // Random glitch effect
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                document.body.style.filter = 'hue-rotate(180deg) contrast(1.5)';
+                setTimeout(() => {
+                    document.body.style.filter = 'none';
+                }, 100);
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
